@@ -1,8 +1,9 @@
 // Spotify API configuration
-const clientId = '501a427e2c0041638cc6a46c156546ff'; // Your Spotify Client ID
+const clientId = '08b7cec4c6304fe6a2abc38b3c9ed93b'; // Your Spotify Client ID - you may need to create your own
 // Fixed redirect URI - this MUST exactly match what you set in your Spotify Developer Dashboard
-const redirectUri = 'https://danielaja.github.io/Playlist-DJ/';
-const scope = 'user-read-private user-read-email playlist-modify-public playlist-modify-private streaming user-read-playback-state user-modify-playback-state';
+const redirectUri = window.location.origin + window.location.pathname;
+// Extended scope to include all the permissions needed for full playback
+const scope = 'user-read-private user-read-email playlist-modify-public playlist-modify-private streaming user-read-playback-state user-modify-playback-state user-read-currently-playing app-remote-control';
 
 // Application state
 let accessToken = null;
@@ -89,6 +90,11 @@ function initialize() {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
     } catch (e) {
       console.error('Web Audio API is not supported in this browser', e);
+    }
+    
+    // Initialize Spotify player if SDK is ready
+    if (window.Spotify) {
+      initializeSpotifyPlayer();
     }
     
     // Show the application UI
@@ -440,7 +446,24 @@ async function savePlaylistToSpotify() {
 }
 
 // Function to play a custom track with time sections and fades
+// Uses Spotify Premium for full tracks when available, otherwise uses preview URLs
 async function playCustomTrack(customTrack, index) {
+  // Try to play full track for premium users first
+  const uri = customTrack.spotifyTrack.uri;
+  const startTimeMs = Math.floor(customTrack.startTime * 1000);
+  
+  // Try to play with Spotify Premium SDK first (if available)
+  if (playFullTrack(uri, startTimeMs)) {
+    // Update UI to reflect playing state
+    currentPlayingIndex = index;
+    isPlaying = true;
+    playPauseButton.textContent = 'Pause';
+    nowPlayingTitle.textContent = `${customTrack.spotifyTrack.name} - ${customTrack.spotifyTrack.artists[0].name}`;
+    playerContainer.classList.remove('hidden');
+    return;
+  }
+  
+  // Fall back to preview if full playback not available
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -450,12 +473,11 @@ async function playCustomTrack(customTrack, index) {
     audioSource.stop();
   }
   
-  // Get track audio - if it's just a preview URL, use that
-  // otherwise fetch the full track audio if available through the Web Playback SDK
+  // Use preview URL as fallback for non-premium users
   const audioUrl = customTrack.spotifyTrack.preview_url;
   
   if (!audioUrl) {
-    alert('Preview not available for this track.');
+    alert('Preview not available for this track. Spotify Premium is required for full playback.');
     return;
   }
   
@@ -542,11 +564,127 @@ async function playCustomTrack(customTrack, index) {
   }
 }
 
-// Initialize Spotify Web Playback SDK
+// Spotify Player object for premium users
+let spotifyPlayer = null;
+
+// Initialize Spotify Web Playback SDK for full track playback (Premium users only)
 window.onSpotifyWebPlaybackSDKReady = () => {
-  // Note: Implement Spotify Playback SDK for full-track playback here
-  // This would require a premium Spotify account
   console.log('Spotify Web Playback SDK ready');
+  
+  // Only initialize if user has access token (is logged in)
+  if (accessToken) {
+    initializeSpotifyPlayer();
+  }
+};
+
+// Initialize the Spotify Player for premium users
+function initializeSpotifyPlayer() {
+  spotifyPlayer = new Spotify.Player({
+    name: 'PlaylistDJ Web Player',
+    getOAuthToken: cb => { cb(accessToken); },
+    volume: 0.5
+  });
+
+  // Error handling
+  spotifyPlayer.addListener('initialization_error', ({ message }) => {
+    console.error('Spotify player initialization error:', message);
+  });
+  
+  spotifyPlayer.addListener('authentication_error', ({ message }) => {
+    console.error('Spotify player authentication error:', message);
+    alert('Premium Spotify account required for full track playback');
+  });
+  
+  spotifyPlayer.addListener('account_error', ({ message }) => {
+    console.error('Spotify player account error:', message);
+    alert('Premium Spotify account required for full track playback');
+  });
+  
+  spotifyPlayer.addListener('playback_error', ({ message }) => {
+    console.error('Spotify player playback error:', message);
+  });
+
+  // Playback status updates
+  spotifyPlayer.addListener('player_state_changed', state => {
+    if (state) {
+      updatePlayerUI(state);
+    }
+  });
+
+  // Ready
+  spotifyPlayer.addListener('ready', ({ device_id }) => {
+    console.log('Spotify player ready with device ID:', device_id);
+    localStorage.setItem('spotify_device_id', device_id);
+    
+    // Alert user that premium features are available
+    if (!localStorage.getItem('premium_notice_shown')) {
+      alert('Spotify Premium detected! You can now play full tracks instead of just previews.');
+      localStorage.setItem('premium_notice_shown', 'true');
+    }
+  });
+
+  // Not Ready
+  spotifyPlayer.addListener('not_ready', ({ device_id }) => {
+    console.log('Spotify player device ID has gone offline:', device_id);
+  });
+
+  // Connect to the player
+  spotifyPlayer.connect();
+}
+
+// Update player UI based on state from Spotify player
+function updatePlayerUI(state) {
+  if (!state) return;
+  
+  // Update play/pause button
+  if (state.paused) {
+    playPauseButton.textContent = 'Play';
+    isPlaying = false;
+  } else {
+    playPauseButton.textContent = 'Pause';
+    isPlaying = true;
+  }
+  
+  // Update track info if there's a track playing
+  if (state.track_window.current_track) {
+    const track = state.track_window.current_track;
+    nowPlayingTitle.textContent = `${track.name} - ${track.artists[0].name}`;
+  }
+  
+  // Update progress bar
+  if (state.duration && state.position) {
+    const progress = (state.position / state.duration) * 100;
+    progressBar.style.width = `${progress}%`;
+  }
+}
+
+// Play a full track for premium users, or preview for free users
+async function playFullTrack(uri, startMs = 0) {
+  const deviceId = localStorage.getItem('spotify_device_id');
+  
+  // If we have a device ID (premium user), play the full track
+  if (deviceId) {
+    try {
+      await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          uris: [uri],
+          position_ms: startMs
+        })
+      });
+      return true; // Successfully played with Spotify Premium
+    } catch (error) {
+      console.error('Error playing full track:', error);
+      return false; // Failed to play with Premium
+    }
+  }
+  
+  return false; // No premium capability detected
+}
 };
 
 // Handle search input for suggestions
@@ -643,6 +781,25 @@ function togglePlayPause() {
     return;
   }
   
+  // Check if we're using Spotify Premium SDK
+  const deviceId = localStorage.getItem('spotify_device_id');
+  if (deviceId && spotifyPlayer) {
+    // Use Spotify Premium SDK playback control
+    if (isPlaying) {
+      spotifyPlayer.pause().then(() => {
+        isPlaying = false;
+        playPauseButton.textContent = 'Play';
+      });
+    } else {
+      spotifyPlayer.resume().then(() => {
+        isPlaying = true;
+        playPauseButton.textContent = 'Pause';
+      });
+    }
+    return;
+  }
+  
+  // Fallback to Web Audio API for non-premium
   if (isPlaying) {
     // Pause
     audioSource.stop();
