@@ -26,7 +26,7 @@ PlaylistDJ is a web application that allows users to create Spotify playlists wi
 
 ## Visit the App
 
-You can access the live application at: [https://yourusername.github.io/playlist-dj/](https://yourusername.github.io/playlist-dj/)
+You can access the live application at: [https://danielaja.github.io/Playlist-DJ] (https://danielaja.github.io/Playlist-DJ/)
 
 ## Note
 
