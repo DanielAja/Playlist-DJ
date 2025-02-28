@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSnip - Custom Spotify Playlist Creator</title>
+  <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+  <header>
+    <h1>SoundSnip</h1>
+    <p>Create Spotify playlists with custom time sections and transitions</p>
+  </header>
+
+  <main>
+    <section id="login-section">
+      <button id="login-button">Connect with Spotify</button>
+    </section>
+
+    <section id="app-section" class="hidden">
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search for songs...">
+        <button id="search-button">Search</button>
+        <div id="search-results"></div>
+      </div>
+
+      <div class="playlist-container">
+        <h2>Your Custom Playlist</h2>
+        <input type="text" id="playlist-name" placeholder="Playlist Name">
+        <ul id="playlist-tracks"></ul>
+        <button id="save-playlist" class="primary-button">Save to Spotify</button>
+      </div>
+
+      <div id="track-editor" class="hidden">
+        <h3>Edit Track</h3>
+        <div class="track-info">
+          <p id="track-title"></p>
+          <p id="track-artist"></p>
+        </div>
+        <div class="time-selector">
+          <div class="time-control">
+            <label for="start-time">Start Time:</label>
+            <input type="range" id="start-time" min="0" max="100" value="0">
+            <span id="start-time-display">0:00</span>
+          </div>
+          <div class="time-control">
+            <label for="end-time">End Time:</label>
+            <input type="range" id="end-time" min="0" max="100" value="100">
+            <span id="end-time-display">0:00</span>
+          </div>
+        </div>
+        <div class="fade-controls">
+          <div class="fade-control">
+            <label for="fade-in">Fade In (seconds):</label>
+            <input type="range" id="fade-in" min="0" max="10" value="0" step="0.5">
+            <span id="fade-in-display">0</span>
+          </div>
+          <div class="fade-control">
+            <label for="fade-out">Fade Out (seconds):</label>
+            <input type="range" id="fade-out" min="0" max="10" value="0" step="0.5">
+            <span id="fade-out-display">0</span>
+          </div>
+        </div>
+        <div class="track-preview">
+          <audio id="preview-player" controls></audio>
+        </div>
+        <div class="track-buttons">
+          <button id="save-track">Save Changes</button>
+          <button id="cancel-edit">Cancel</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Created with Spotify Web API</p>
+  </footer>
+
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script src="javascript.js"></script>
+</body>
+</html>
