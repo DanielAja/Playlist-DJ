@@ -1,6 +1,6 @@
-# SoundSnip - Custom Spotify Playlist Creator
+# PlaylistDJ - Custom Spotify Playlist Creator
 
-SoundSnip is a web application that allows users to create Spotify playlists with custom time sections and transitions. Users can set specific start and end times for tracks, as well as add fade-in and fade-out effects.
+PlaylistDJ is a web application that allows users to create Spotify playlists with custom time sections and transitions. Users can set specific start and end times for tracks, as well as add fade-in and fade-out effects.
 
 ## Features
 

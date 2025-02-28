@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SoundSnip - Custom Spotify Playlist Creator</title>
+  <title>PlaylistDJ - Custom Spotify Playlist Creator</title>
   <link rel="stylesheet" href="stylesheet.css">
 </head>
 <body>
   <header>
-    <h1>SoundSnip</h1>
+    <h1>PlaylistDJ</h1>
     <p>Create Spotify playlists with custom time sections and transitions</p>
   </header>
 
@@ -22,13 +22,35 @@
         <input type="text" id="search-input" placeholder="Search for songs...">
         <button id="search-button">Search</button>
         <div id="search-results"></div>
+        <div id="suggestion-popup" class="hidden">
+          <div class="suggestion-header">
+            <span>Suggested Songs</span>
+            <button id="close-suggestions">×</button>
+          </div>
+          <div id="suggestion-list"></div>
+        </div>
       </div>
 
       <div class="playlist-container">
         <h2>Your Custom Playlist</h2>
         <input type="text" id="playlist-name" placeholder="Playlist Name">
         <ul id="playlist-tracks"></ul>
-        <button id="save-playlist" class="primary-button">Save to Spotify</button>
+        <div class="playlist-controls">
+          <button id="save-playlist" class="primary-button">Save to Spotify</button>
+          <button id="play-playlist" class="secondary-button">Play Playlist</button>
+          <button id="save-local" class="secondary-button">Save Locally</button>
+        </div>
+        <div id="player-container" class="hidden">
+          <h3>Now Playing: <span id="now-playing-title"></span></h3>
+          <div class="player-controls">
+            <button id="prev-track">Previous</button>
+            <button id="play-pause">Play</button>
+            <button id="next-track">Next</button>
+          </div>
+          <div class="progress-container">
+            <div id="progress-bar"></div>
+          </div>
+        </div>
       </div>
 
       <div id="track-editor" class="hidden">

@@ -121,6 +121,59 @@
     margin-right: 1rem;
   }
   
+  #suggestion-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: rgba(30, 30, 30, 0.95);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .suggestion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: rgba(20, 20, 20, 0.9);
+    border-bottom: 1px solid #444;
+  }
+  
+  #close-suggestions {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  
+  #suggestion-list {
+    padding: 0.5rem;
+  }
+  
+  .suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 0.3rem;
+  }
+  
+  .suggestion-item:hover {
+    background-color: rgba(60, 60, 60, 0.9);
+  }
+  
+  .suggestion-item img {
+    width: 40px;
+    height: 40px;
+    margin-right: 0.8rem;
+  }
+  
   /* Playlist section */
   .playlist-container {
     padding: 1.5rem;
@@ -184,8 +237,17 @@
     cursor: pointer;
   }
   
+  .play-track {
+    color: var(--spotify-green) !important;
+    border-color: var(--spotify-green) !important;
+  }
+  
   .track-actions button:hover {
     background-color: rgba(60, 60, 60, 0.9);
+  }
+  
+  .play-track:hover {
+    background-color: rgba(29, 185, 84, 0.2) !important;
   }
   
   .primary-button {
@@ -202,6 +264,71 @@
   
   .primary-button:hover {
     background-color: #1ed760;
+  }
+  
+  .secondary-button {
+    background-color: #333;
+    color: white;
+    border: 1px solid var(--spotify-green);
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 0 0.5rem;
+  }
+  
+  .secondary-button:hover {
+    background-color: #444;
+  }
+  
+  .playlist-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+  
+  #player-container {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: rgba(20, 20, 20, 0.7);
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .player-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .player-controls button {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .player-controls button:hover {
+    background-color: var(--spotify-green);
+  }
+  
+  .progress-container {
+    width: 100%;
+    height: 6px;
+    background-color: #444;
+    border-radius: 3px;
+    margin-top: 1rem;
+    overflow: hidden;
+  }
+  
+  #progress-bar {
+    height: 100%;
+    background-color: var(--spotify-green);
+    width: 0;
+    transition: width 0.3s;
   }
   
   /* Track editor */
