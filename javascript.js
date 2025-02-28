@@ -1,6 +1,9 @@
 // Spotify API configuration
 const clientId = 'YOUR_CLIENT_ID'; // Replace with your Spotify Client ID
-const redirectUri = window.location.origin + window.location.pathname;
+// GitHub Pages compatible redirectUri - will work with both local development and GitHub Pages
+const redirectUri = window.location.href.includes('github.io') 
+  ? 'https://' + window.location.host + window.location.pathname 
+  : window.location.origin + window.location.pathname;
 const scope = 'user-read-private user-read-email playlist-modify-public playlist-modify-private streaming user-read-playback-state user-modify-playback-state';
 
 // Application state
