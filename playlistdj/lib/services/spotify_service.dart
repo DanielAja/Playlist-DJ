@@ -17,11 +17,11 @@ class SpotifyService {
   // Get client ID from .env file
   String get clientId => dotenv.env['SPOTIFY_CLIENT_ID'] ?? '';
   
-  // Get redirect URI from .env file or use default for GitHub Pages
-  String get redirectUri => dotenv.env['SPOTIFY_REDIRECT_URI'] ?? 'https://danielaja.github.io/Playlist-DJ/';
+  // Get redirect URI from .env file or use custom scheme for app redirect
+  String get redirectUri => dotenv.env['SPOTIFY_REDIRECT_URI'] ?? 'playlistdj://callback';
   
-  // Spotify scopes needed for the app
-  final String _scope = 'user-read-private user-read-email playlist-modify-public playlist-modify-private streaming user-read-playback-state user-modify-playback-state user-read-currently-playing';
+  // Spotify scopes needed for the app (including full playback)
+  final String _scope = 'user-read-private user-read-email playlist-modify-public playlist-modify-private streaming user-read-playback-state user-modify-playback-state user-read-currently-playing app-remote-control';
   
   // Check if user is logged in
   Future<bool> isLoggedIn() async {
@@ -39,10 +39,10 @@ class SpotifyService {
           '&redirect_uri=${Uri.encodeComponent(redirectUri)}'
           '&scope=${Uri.encodeComponent(_scope)}');
       
-      // For web redirect URI, use more flexible approach with callbackUrlScheme
+      // Use app-specific scheme for callback
       final result = await FlutterWebAuth.authenticate(
         url: authorizeUrl.toString(),
-        callbackUrlScheme: 'https',
+        callbackUrlScheme: 'playlistdj',
       );
       
       // Extract the access token from the redirect URL
@@ -93,6 +93,60 @@ class SpotifyService {
     return (response['tracks']['items'] as List)
         .map((json) => Track.fromJson(json))
         .toList();
+  }
+  
+  // Play a track using Spotify Connect
+  Future<bool> playTrackWithSpotify(String trackUri) async {
+    try {
+      await _put('/me/player/play', body: {
+        'uris': [trackUri],
+      });
+      return true;
+    } catch (e) {
+      print('Error playing track with Spotify: $e');
+      return false;
+    }
+  }
+  
+  // Get available devices
+  Future<List<Map<String, dynamic>>> getAvailableDevices() async {
+    final response = await _get('/me/player/devices');
+    return (response['devices'] as List).cast<Map<String, dynamic>>();
+  }
+  
+  // Transfer playback to device
+  Future<bool> transferPlayback(String deviceId) async {
+    try {
+      await _put('/me/player', body: {
+        'device_ids': [deviceId],
+      });
+      return true;
+    } catch (e) {
+      print('Error transferring playback: $e');
+      return false;
+    }
+  }
+  
+  // Pause playback
+  Future<bool> pausePlayback() async {
+    try {
+      await _put('/me/player/pause');
+      return true;
+    } catch (e) {
+      print('Error pausing playback: $e');
+      return false;
+    }
+  }
+  
+  // Resume playback
+  Future<bool> resumePlayback() async {
+    try {
+      await _put('/me/player/play');
+      return true;
+    } catch (e) {
+      print('Error resuming playback: $e');
+      return false;
+    }
   }
   
   // Create a playlist
@@ -160,6 +214,29 @@ class SpotifyService {
       return {};
     } else {
       throw Exception('Failed to perform POST request: ${response.statusCode}');
+    }
+  }
+  
+  // Helper method for PUT requests
+  Future<dynamic> _put(String endpoint, {Map<String, dynamic>? body}) async {
+    await _ensureAccessToken();
+    
+    final response = await http.put(
+      Uri.parse('$_baseUrl$endpoint'),
+      headers: {
+        'Authorization': 'Bearer $_accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: body != null ? json.encode(body) : null,
+    );
+    
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isNotEmpty) {
+        return json.decode(response.body);
+      }
+      return {};
+    } else {
+      throw Exception('Failed to perform PUT request: ${response.statusCode}');
     }
   }
   

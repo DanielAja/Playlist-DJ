@@ -4,12 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/playlist_provider.dart';
-import 'providers/player_provider.dart';
 import 'providers/search_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'utils/app_theme.dart';
-import 'widgets/player_bar.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +33,6 @@ class PlaylistDJApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => PlaylistProvider()),
-        ChangeNotifierProvider(create: (_) => PlayerProvider()),
         ChangeNotifierProvider(create: (_) => SearchProvider()),
       ],
       child: MaterialApp(
@@ -85,14 +82,8 @@ class _AppRootState extends State<AppRoot> {
         }
         
         // Show main app if authenticated
-        return Scaffold(
-          body: const SafeArea(child: HomeScreen()),
-          bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              PlayerBar(),
-            ],
-          ),
+        return const Scaffold(
+          body: SafeArea(child: HomeScreen()),
         );
       },
     );

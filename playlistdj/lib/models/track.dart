@@ -4,11 +4,6 @@ class Track {
   final List<Artist> artists;
   final Album album;
   final String uri;
-  final String previewUrl;
-  double startTime;
-  double endTime;
-  double fadeIn;
-  double fadeOut;
 
   Track({
     required this.id,
@@ -16,11 +11,6 @@ class Track {
     required this.artists,
     required this.album,
     required this.uri,
-    required this.previewUrl,
-    this.startTime = 0.0,
-    this.endTime = 30.0, // Default preview length
-    this.fadeIn = 0.0,
-    this.fadeOut = 0.0,
   });
 
   factory Track.fromJson(Map<String, dynamic> json) {
@@ -30,11 +20,6 @@ class Track {
       artists: (json['artists'] as List).map((a) => Artist.fromJson(a)).toList(),
       album: Album.fromJson(json['album']),
       uri: json['uri'],
-      previewUrl: json['preview_url'] ?? '',
-      startTime: json['start_time']?.toDouble() ?? 0.0,
-      endTime: json['end_time']?.toDouble() ?? 30.0,
-      fadeIn: json['fade_in']?.toDouble() ?? 0.0,
-      fadeOut: json['fade_out']?.toDouble() ?? 0.0,
     );
   }
 
@@ -45,11 +30,6 @@ class Track {
       'artists': artists.map((a) => a.toJson()).toList(),
       'album': album.toJson(),
       'uri': uri,
-      'preview_url': previewUrl,
-      'start_time': startTime,
-      'end_time': endTime,
-      'fade_in': fadeIn,
-      'fade_out': fadeOut,
     };
   }
 

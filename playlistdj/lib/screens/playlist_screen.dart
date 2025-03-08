@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/playlist_provider.dart';
-import '../providers/player_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/format_utils.dart';
@@ -37,8 +36,8 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<PlaylistProvider, PlayerProvider>(
-      builder: (context, playlistProvider, playerProvider, _) {
+    return Consumer<PlaylistProvider>(
+      builder: (context, playlistProvider, _) {
         final playlist = playlistProvider.currentPlaylist;
         
         return Scaffold(
@@ -95,20 +94,6 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                     ),
                     Row(
                       children: [
-                        // Play button
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.play_arrow),
-                          label: const Text('Play'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                          ),
-                          onPressed: playlist.tracks.isEmpty
-                              ? null
-                              : () {
-                                  playerProvider.playPlaylist(playlist);
-                                },
-                        ),
-                        const SizedBox(width: 8),
                         // Save button
                         ElevatedButton.icon(
                           icon: const Icon(Icons.save),
@@ -132,7 +117,7 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
               Expanded(
                 child: playlist.tracks.isEmpty
                     ? _buildEmptyPlaylist()
-                    : _buildTracksList(playlist, playlistProvider, playerProvider),
+                    : _buildTracksList(playlist, playlistProvider),
               ),
             ],
           ),
@@ -183,8 +168,7 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
   // Build tracks list
   Widget _buildTracksList(
     playlist, 
-    PlaylistProvider playlistProvider, 
-    PlayerProvider playerProvider
+    PlaylistProvider playlistProvider
   ) {
     return ReorderableListView.builder(
       padding: const EdgeInsets.all(8.0),
@@ -200,12 +184,10 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
       },
       itemBuilder: (context, index) {
         final track = playlist.tracks[index];
-        final isPlaying = playerProvider.currentTrack?.id == track.id;
         
         return Card(
           key: Key('track_$index'),
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-          color: isPlaying ? AppColors.spotifyGreen.withOpacity(0.2) : null,
           child: ListTile(
             leading: track.album.thumbnailUrl.isNotEmpty
                 ? ClipRRect(
@@ -227,9 +209,8 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
               track.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontWeight: isPlaying ? FontWeight.bold : FontWeight.normal,
-                color: isPlaying ? AppColors.spotifyGreen : null,
+              style: const TextStyle(
+                fontWeight: FontWeight.normal,
               ),
             ),
             subtitle: Column(
@@ -241,7 +222,7 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${formatSecondsFromDouble(track.startTime)} - ${formatSecondsFromDouble(track.endTime)} | Fade in: ${track.fadeIn}s | Fade out: ${track.fadeOut}s',
+                  'Added to playlist',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.mediumGray,
@@ -252,18 +233,19 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Play button
+                // View button
                 IconButton(
-                  icon: Icon(
-                    isPlaying ? Icons.pause_circle_outline : Icons.play_circle_outline,
-                    color: isPlaying ? AppColors.spotifyGreen : null,
-                  ),
+                  icon: const Icon(Icons.visibility),
                   onPressed: () {
-                    if (isPlaying) {
-                      playerProvider.togglePlayPause();
-                    } else {
-                      playerProvider.playTrackAtIndex(index);
-                    }
+                    Navigator.push(
+                      context, 
+                      MaterialPageRoute(
+                        builder: (context) => TrackEditorScreen(
+                          track: track,
+                          editIndex: index,
+                        ),
+                      ),
+                    );
                   },
                 ),
                 // Edit button
@@ -292,11 +274,16 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
             ),
             isThreeLine: true,
             onTap: () {
-              if (isPlaying) {
-                playerProvider.togglePlayPause();
-              } else {
-                playerProvider.playTrackAtIndex(index);
-              }
+              // Navigate to track editor
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TrackEditorScreen(
+                    track: track,
+                    editIndex: index,
+                  ),
+                ),
+              );
             },
           ),
         );

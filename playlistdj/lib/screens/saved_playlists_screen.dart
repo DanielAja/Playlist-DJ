@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/playlist_provider.dart';
-import '../providers/player_provider.dart';
 import '../utils/app_theme.dart';
+import 'home_screen.dart';
 
 class SavedPlaylistsScreen extends StatefulWidget {
   const SavedPlaylistsScreen({Key? key}) : super(key: key);
@@ -109,24 +109,15 @@ class _SavedPlaylistsScreenState extends State<SavedPlaylistsScreen> {
                               ),
                               Row(
                                 children: [
-                                  // Play button
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.play_circle_outline,
-                                      color: AppColors.spotifyGreen,
-                                    ),
-                                    onPressed: () {
-                                      Provider.of<PlayerProvider>(context, listen: false)
-                                          .playPlaylist(playlist);
-                                    },
-                                  ),
                                   // Edit button
                                   IconButton(
                                     icon: const Icon(Icons.edit_outlined),
                                     onPressed: () {
                                       playlistProvider.loadPlaylist(playlist.id);
-                                      // Navigate to playlist tab
-                                      DefaultTabController.of(context)?.animateTo(0);
+                                      // Navigate to playlist tab (using index)
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(builder: (context) => const HomeScreen(initialTab: 0))
+                                      );
                                     },
                                   ),
                                   // Delete button
@@ -154,7 +145,9 @@ class _SavedPlaylistsScreenState extends State<SavedPlaylistsScreen> {
             onPressed: () {
               playlistProvider.createNewPlaylist();
               // Navigate to playlist tab
-              DefaultTabController.of(context)?.animateTo(0);
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const HomeScreen(initialTab: 0))
+              );
             },
           ),
         );
@@ -194,7 +187,9 @@ class _SavedPlaylistsScreenState extends State<SavedPlaylistsScreen> {
             onPressed: () {
               Provider.of<PlaylistProvider>(context, listen: false).createNewPlaylist();
               // Navigate to playlist tab
-              DefaultTabController.of(context)?.animateTo(0);
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const HomeScreen(initialTab: 0))
+              );
             },
           ),
         ],
@@ -239,17 +234,6 @@ class _SavedPlaylistsScreenState extends State<SavedPlaylistsScreen> {
                 ),
               const SizedBox(height: 24),
               
-              // Play
-              ListTile(
-                leading: const Icon(Icons.play_arrow, color: AppColors.spotifyGreen),
-                title: const Text('Play'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Provider.of<PlayerProvider>(context, listen: false)
-                      .playPlaylist(playlist);
-                },
-              ),
-              
               // Edit
               ListTile(
                 leading: const Icon(Icons.edit, color: AppColors.spotifyGreen),
@@ -258,7 +242,9 @@ class _SavedPlaylistsScreenState extends State<SavedPlaylistsScreen> {
                   Navigator.pop(context);
                   playlistProvider.loadPlaylist(playlist.id);
                   // Navigate to playlist tab
-                  DefaultTabController.of(context)?.animateTo(0);
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const HomeScreen(initialTab: 0))
+                  );
                 },
               ),
               

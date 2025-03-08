@@ -1,20 +1,38 @@
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 import '../models/track.dart';
+import 'spotify_service.dart';
 
 class AudioPlayerService {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final SpotifyService _spotifyService = SpotifyService();
+  
   Track? _currentTrack;
+  bool _useSpotifyConnect = false;
   
   // Constructor
   AudioPlayerService() {
     _initAudioSession();
+    _checkSpotifyPremium();
   }
   
   // Initialize audio session
   Future<void> _initAudioSession() async {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
+  }
+  
+  // Check if user has Spotify Premium subscription
+  Future<void> _checkSpotifyPremium() async {
+    try {
+      if (await _spotifyService.isLoggedIn()) {
+        final user = await _spotifyService.getCurrentUser();
+        _useSpotifyConnect = user.isPremium;
+      }
+    } catch (e) {
+      print('Error checking Spotify Premium: $e');
+      _useSpotifyConnect = false;
+    }
   }
   
   // Get current track
@@ -34,9 +52,32 @@ class AudioPlayerService {
     _currentTrack = track;
     
     try {
-      // Check if the track has a preview URL
+      bool spotifyPlaybackAttempted = false;
+      
+      // Try to use Spotify Connect for Premium users
+      if (_useSpotifyConnect) {
+        try {
+          spotifyPlaybackAttempted = true;
+          final success = await _spotifyService.playTrackWithSpotify(track.uri);
+          if (success) {
+            // Spotify is handling playback
+            return;
+          }
+        } catch (e) {
+          print('Error using Spotify Connect: $e');
+          // Continue to fallback method
+        }
+      }
+      
+      // Fall back to preview URL for non-Premium users or if Spotify Connect fails
       if (track.previewUrl.isEmpty) {
-        throw Exception('This track does not have a preview URL');
+        if (spotifyPlaybackAttempted) {
+          print('No preview URL available and Spotify Connect failed');
+          throw Exception('Unable to play this track. No preview available and Spotify Connect failed.');
+        } else {
+          print('No preview URL available and Spotify Connect not attempted/available');
+          throw Exception('This track does not have a preview available.');
+        }
       }
       
       // Set volume to 0 for fade-in
@@ -45,7 +86,7 @@ class AudioPlayerService {
       // Load the audio file
       await _audioPlayer.setUrl(track.previewUrl);
       
-      // Set the start position
+      // Set the start position 
       await _audioPlayer.seek(Duration(seconds: track.startTime.toInt()));
       
       // Calculate the end time for playing
@@ -127,17 +168,29 @@ class AudioPlayerService {
   
   // Pause the player
   Future<void> pause() async {
-    await _audioPlayer.pause();
+    if (_useSpotifyConnect) {
+      await _spotifyService.pausePlayback();
+    } else {
+      await _audioPlayer.pause();
+    }
   }
   
   // Resume playback
   Future<void> resume() async {
-    await _audioPlayer.play();
+    if (_useSpotifyConnect) {
+      await _spotifyService.resumePlayback();
+    } else {
+      await _audioPlayer.play();
+    }
   }
   
   // Stop playback
   Future<void> stop() async {
-    await _audioPlayer.stop();
+    if (_useSpotifyConnect) {
+      await _spotifyService.pausePlayback();
+    } else {
+      await _audioPlayer.stop();
+    }
     _currentTrack = null;
   }
   

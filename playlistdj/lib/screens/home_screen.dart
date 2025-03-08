@@ -8,7 +8,9 @@ import 'playlist_screen.dart';
 import 'saved_playlists_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final int initialTab;
+  
+  const HomeScreen({Key? key, this.initialTab = 0}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -27,6 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Set initial tab from widget parameter
+    _currentIndex = widget.initialTab;
+    
     // Initialize playlist provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PlaylistProvider>(context, listen: false).initialize();

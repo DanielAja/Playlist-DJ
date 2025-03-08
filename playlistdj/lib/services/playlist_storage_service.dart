@@ -44,9 +44,19 @@ class PlaylistStorageService {
       final prefs = await SharedPreferences.getInstance();
       final playlistsJson = prefs.getStringList(_playlistsKey) ?? [];
       
-      return playlistsJson
-          .map((json) => Playlist.fromJson(jsonDecode(json)))
-          .toList();
+      final List<Playlist> playlists = [];
+      
+      for (final jsonStr in playlistsJson) {
+        try {
+          final Map<String, dynamic> jsonMap = jsonDecode(jsonStr);
+          playlists.add(Playlist.fromJson(jsonMap));
+        } catch (e) {
+          print('Error parsing playlist JSON: $e');
+          // Skip any playlist that can't be parsed
+        }
+      }
+      
+      return playlists;
     } catch (e) {
       throw Exception('Failed to get playlists: $e');
     }
@@ -58,10 +68,16 @@ class PlaylistStorageService {
       final prefs = await SharedPreferences.getInstance();
       final playlistsJson = prefs.getStringList(_playlistsKey) ?? [];
       
-      for (final json in playlistsJson) {
-        final playlist = Playlist.fromJson(jsonDecode(json));
-        if (playlist.id == id) {
-          return playlist;
+      for (final jsonStr in playlistsJson) {
+        try {
+          final Map<String, dynamic> jsonMap = jsonDecode(jsonStr);
+          final playlist = Playlist.fromJson(jsonMap);
+          if (playlist.id == id) {
+            return playlist;
+          }
+        } catch (e) {
+          print('Error parsing playlist JSON: $e');
+          // Skip any playlist that can't be parsed
         }
       }
       
